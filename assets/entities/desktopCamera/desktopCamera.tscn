@@ -1,0 +1,163 @@
+[gd_scene load_steps=10 format=3 uid="uid://beaqgs4lhnq4l"]
+
+[ext_resource type="Script" uid="uid://dfiuq8nmdla7c" path="res://assets/entities/desktopCamera/desktop_camera.gd" id="1_g5esr"]
+[ext_resource type="PackedScene" uid="uid://g6ldsgg7b31g" path="res://assets/scenes/ui/desktop/desktop_hud.tscn" id="2_04y67"]
+
+[sub_resource type="Shader" id="Shader_6jnc8"]
+code = "shader_type canvas_item;
+
+uniform sampler2D goo_tex : source_color; // this will be the SubViewport texture
+uniform vec4 goo_color : source_color = vec4(0.9, 0.9, 1.0, 1.0);
+uniform float blur_radius = 1.5; // in pixels
+uniform float thickness_scale = 1.5;
+
+void fragment() {
+    vec2 uv = UV;
+    
+    // Convert blur radius from pixels to UV
+    vec2 tex_size = vec2(textureSize(goo_tex, 0));
+    vec2 step = blur_radius / tex_size;
+
+    // Simple 9-tap box blur on the alpha channel
+    float sum = 0.0;
+    vec2 offsets[9] = vec2[](
+        vec2(-1.0, -1.0), vec2(0.0, -1.0), vec2(1.0, -1.0),
+        vec2(-1.0,  0.0), vec2(0.0,  0.0), vec2(1.0,  0.0),
+        vec2(-1.0,  1.0), vec2(0.0,  1.0), vec2(1.0,  1.0)
+    );
+
+    for (int i = 0; i < 9; i++) {
+        sum += texture(goo_tex, uv + offsets[i] * step).a;
+    }
+
+    float thickness = sum / 9.0;
+    thickness *= thickness_scale;
+
+    // Threshold + smoothstep to get nice blobby shapes
+    float edge = smoothstep(0.2, 0.6, thickness);
+
+    // Final goo color, could add fake lighting based on edge, etc.
+    vec3 color = goo_color.rgb;
+    // Make center look “thicker” (slightly darker)
+    color *= mix(1.0, 0.8, edge);
+
+    COLOR.rgb = color;
+    COLOR.a = clamp(edge, 0.0, 1.0);
+}
+"
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_7d3uv"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_63bm4"]
+resource_local_to_scene = true
+shader = SubResource("Shader_6jnc8")
+shader_parameter/goo_tex = SubResource("ViewportTexture_7d3uv")
+shader_parameter/goo_color = Color(0.9, 0.9, 1, 1)
+shader_parameter/blur_radius = 2.725
+shader_parameter/thickness_scale = 1.5
+
+[sub_resource type="Shader" id="Shader_7d3uv"]
+code = "shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_always, cull_back;
+
+uniform float blob_radius : hint_range(0.05, 1.0) = 0.3;
+uniform float edge_softness : hint_range(0.0, 1.0) = 0.3;
+
+void vertex() {
+    float r = length(VERTEX);
+    if (r > 0.0) {
+        VERTEX = normalize(VERTEX) * blob_radius;
+    }
+}
+
+void fragment() {
+    // Measure distance from center in object space
+    float r = length(VERTEX) / blob_radius;
+
+    // Soft radial falloff
+    float alpha = 1.0 - smoothstep(1.0 - edge_softness, 1.0, r);
+
+    // This “intensity” will add up (overlapping blobs => higher value)
+    ALBEDO = vec3(alpha);
+    ALPHA = alpha;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6jnc8"]
+render_priority = 0
+shader = SubResource("Shader_7d3uv")
+shader_parameter/blob_radius = 0.3
+shader_parameter/edge_softness = 0.3
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_g5esr"]
+radius = 0.16224162
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_04y67"]
+radius = 0.2475586
+height = 1.7192383
+
+[node name="DesktopCamera" type="Camera3D"]
+script = ExtResource("1_g5esr")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+material = SubResource("ShaderMaterial_63bm4")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+canvas_cull_mask = 4293918722
+size = Vector2i(1600, 900)
+
+[node name="Camera3D" type="Camera3D" parent="SubViewport"]
+unique_name_in_owner = true
+cull_mask = 2
+
+[node name="ColorRect" type="ColorRect" parent="SubViewport/Camera3D"]
+material = SubResource("ShaderMaterial_6jnc8")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="DesktopHud" parent="." instance=ExtResource("2_04y67")]
+mouse_filter = 1
+
+[node name="RigidBody3D" type="RigidBody3D" parent="."]
+unique_name_in_owner = true
+gravity_scale = 0.0
+freeze = true
+freeze_mode = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D"]
+shape = SubResource("SphereShape3D_g5esr")
+
+[node name="player_cast" type="RayCast3D" parent="."]
+unique_name_in_owner = true
+target_position = Vector3(0, 0, -9000)
+
+[node name="CharacterBody3D" type="CharacterBody3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98897934, 0)
+top_level = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.14038086, 0)
+shape = SubResource("CapsuleShape3D_04y67")
+
+[node name="camera_position" type="Marker3D" parent="CharacterBody3D"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.50843537, 0)

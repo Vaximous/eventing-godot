@@ -1,0 +1,56 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwo6mny02fq2o"]
+
+[ext_resource type="Script" uid="uid://bc2v8x1tpn0a8" path="res://assets/scenes/ui/eventing/event_entry.gd" id="1_7lg65"]
+
+[node name="event_entry" type="MarginContainer"]
+custom_minimum_size = Vector2(0, 38.785)
+offset_right = 524.0
+offset_bottom = 38.785
+script = ExtResource("1_7lg65")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="remove" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "X"
+
+[node name="HSeparator2" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="CheckBox" type="CheckBox" parent="HBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Enabled"
+
+[node name="HSeparator" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="input" type="MenuButton" parent="HBoxContainer" groups=["events"]]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select Input"
+
+[node name="target_sep" type="VSeparator" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="target" type="MenuButton" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select Target"
+
+[node name="output_sep" type="VSeparator" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="output" type="MenuButton" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select Output
+"
+
+[connection signal="pressed" from="HBoxContainer/remove" to="." method="queue_free"]

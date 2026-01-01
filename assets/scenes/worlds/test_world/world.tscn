@@ -1,0 +1,52 @@
+[gd_scene load_steps=8 format=3 uid="uid://bedjnnlmtpcyq"]
+
+[ext_resource type="Script" uid="uid://bim5mntnw11qf" path="res://assets/scripts/world_base/world_base.gd" id="1_6ysxj"]
+[ext_resource type="Texture2D" uid="uid://dqfy2hl2ng731" path="res://assets/textures/Developer_Textures/Dark/texture_05.png" id="2_fnnw6"]
+[ext_resource type="PackedScene" uid="uid://beaqgs4lhnq4l" path="res://assets/entities/desktopCamera/desktopCamera.tscn" id="2_vyepb"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_botke"]
+albedo_texture = ExtResource("2_fnnw6")
+uv1_triplanar = true
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_fnnw6"]
+
+[sub_resource type="Sky" id="Sky_botke"]
+sky_material = SubResource("ProceduralSkyMaterial_fnnw6")
+
+[sub_resource type="Environment" id="Environment_wj21b"]
+background_mode = 2
+sky = SubResource("Sky_botke")
+tonemap_mode = 3
+glow_enabled = true
+glow_intensity = 2.15
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_6ysxj")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.97465706, 0, -14.818237)
+use_collision = true
+size = Vector3(17, 1, 50.312622)
+material = SubResource("StandardMaterial3D_botke")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9106941, 1.2806392, -13.827557)
+use_collision = true
+size = Vector3(1.0753174, 1, 1.6754303)
+material = SubResource("StandardMaterial3D_botke")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6889725, -0.021606922, 6.567238)
+use_collision = true
+size = Vector3(1.0753174, 3.6044922, 1.6754303)
+material = SubResource("StandardMaterial3D_botke")
+
+[node name="DesktopCamera" parent="." instance=ExtResource("2_vyepb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4036603, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_wj21b")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.623825, 0.39078203, -0.6768543, 0, 0.8660254, 0.5, 0.78156406, -0.3119125, 0.5402483, 0, 3, 0)
+shadow_enabled = true
